@@ -1,7 +1,6 @@
 {
   "version": 3,
   "framework": "nextjs",
-  "nodeVersion": "24.x",
   "build": {
     "command": "pnpm build"
   }
