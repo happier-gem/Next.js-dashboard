@@ -1,10 +1,18 @@
-import { Card } from '@/app/ui/dashboard/cards';
+import CardWrapper, { Card } from '@/app/ui/dashboard/cards';
 import RevenueChart from '@/app/ui/dashboard/revenue-chart';
 import LatestInvoices from '@/app/ui/dashboard/latest-invoices';
 import { lusitana } from '@/app/ui/fonts';
-import { fetchCardData } from '@/app/lib/data';
 import { Suspense } from 'react';
-import { RevenueChartSkeleton, LatestInvoicesSkeleton } from '@/app/ui/skeletons';
+import { RevenueChartSkeleton, LatestInvoicesSkeleton, CardsSkeleton } from '@/app/ui/skeletons';
+ 
+async function fetchCardData() {
+  return {
+    numberOfInvoices: 0,
+    numberOfCustomers: 0,
+    totalPaidInvoices: 0,
+    totalPendingInvoices: 0,
+  };
+}
  
 export default async function page() {
   const {
@@ -36,9 +44,13 @@ export default async function page() {
         <Suspense fallback={<LatestInvoicesSkeleton />}>
           <LatestInvoices />
         </Suspense>
+        <Suspense fallback={<CardsSkeleton />}>
+          <CardWrapper />
+        </Suspense>
       </div>
     </main>
   );
 }
+      
 
        
