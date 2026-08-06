@@ -1,6 +1,9 @@
 import postgres from 'postgres';
 
-const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
+// Supabase's pooled POSTGRES_URL (port 6543) runs in transaction mode, which
+// can route each statement to a different backend connection. Named prepared
+// statements don't survive that, so they must be disabled here.
+const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require', prepare: false });
 
 async function listInvoices() {
 	const data = await sql`

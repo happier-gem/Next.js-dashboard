@@ -2,7 +2,10 @@ import bcrypt from 'bcrypt';
 import postgres from 'postgres';
 import { invoices, customers, revenue, users } from '../lib/placeholder-data';
 
-const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
+// Supabase's pooled POSTGRES_URL (port 6543) runs in transaction mode, which
+// can route each statement to a different backend connection. Named prepared
+// statements don't survive that, so they must be disabled here.
+const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require', prepare: false });
 
 async function seedUsers(sqlClient: typeof sql) {
   await sqlClient`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
@@ -38,8 +41,26 @@ async function seedInvoices(sqlClient: typeof sql) {
       customer_id UUID NOT NULL,
       amount INT NOT NULL,
       status VARCHAR(255) NOT NULL,
-      date DATE NOT NULL
+      date DATE NOT NULL,
+      UNIQUE (customer_id, date)
     );
+  `;
+
+  // Older deployments may have this table without the constraint above and
+  // may already contain duplicate rows from before ON CONFLICT was keyed
+  // correctly. Clean those up before adding the constraint so it's safe to
+  // apply on an existing database.
+  await sqlClient`
+    DELETE FROM invoices a USING invoices b
+    WHERE a.ctid < b.ctid
+      AND a.customer_id = b.customer_id
+      AND a.date = b.date;
+  `;
+  await sqlClient`
+    DO $$ BEGIN
+      ALTER TABLE invoices ADD CONSTRAINT invoices_customer_id_date_key UNIQUE (customer_id, date);
+    EXCEPTION WHEN duplicate_object OR duplicate_table THEN NULL;
+    END $$;
   `;
 
   const insertedInvoices = await Promise.all(
@@ -47,7 +68,7 @@ async function seedInvoices(sqlClient: typeof sql) {
       (invoice) => sqlClient`
         INSERT INTO invoices (customer_id, amount, status, date)
         VALUES (${invoice.customer_id}, ${invoice.amount}, ${invoice.status}, ${invoice.date})
-        ON CONFLICT (id) DO NOTHING;
+        ON CONFLICT (customer_id, date) DO NOTHING;
       `,
     ),
   );
@@ -112,6 +133,36 @@ export async function GET() {
 
     return Response.json({ message: 'Database seeded successfully' });
   } catch (error) {
-    return Response.json({ error }, { status: 500 });
+    const pgError = error as {
+      message?: string;
+      code?: string;
+      severity_local?: string;
+      severity?: string;
+      detail?: string;
+      hint?: string;
+      position?: string;
+      stack?: string;
+    };
+
+    console.error('Seed failed:', {
+      message: pgError.message,
+      code: pgError.code,
+      severity_local: pgError.severity_local,
+      severity: pgError.severity,
+      detail: pgError.detail,
+      hint: pgError.hint,
+      position: pgError.position,
+      stack: pgError.stack,
+    });
+
+    return Response.json(
+      {
+        error: pgError.message ?? 'Unknown error',
+        code: pgError.code,
+        detail: pgError.detail,
+        hint: pgError.hint,
+      },
+      { status: 500 },
+    );
   }
 }
