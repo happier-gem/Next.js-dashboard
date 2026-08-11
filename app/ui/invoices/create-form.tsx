@@ -13,7 +13,15 @@ import { createInvoice } from '@/app/lib/actions';
 
 export default function Form({ customers }: { customers: CustomerField[] }) {
   const handleSubmit = async (formData: FormData) => {
-    await createInvoice(formData);
+    // Convert FormData to the shape expected by createInvoice (State-like)
+    const state = {
+      customerId: String(formData.get('customerId') ?? ''),
+      amount: Number(formData.get('amount')),
+      status: String(formData.get('status') ?? ''),
+    };
+
+    // createInvoice expects two arguments; pass a placeholder for the second
+    await createInvoice(state as any, undefined as any);
   };
 
   return (
