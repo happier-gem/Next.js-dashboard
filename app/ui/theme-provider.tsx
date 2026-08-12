@@ -18,8 +18,11 @@ export const themeInitScript = `(function(){try{var s=localStorage.getItem('them
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>('light');
 
-  // Sync React state with the class the init script already applied.
+  // Sync React state with the class the pre-hydration init script already
+  // applied to <html>. This must run once after mount: reading it during
+  // render would desync server/client output and cause a hydration warning.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTheme(
       document.documentElement.classList.contains('dark') ? 'dark' : 'light',
     );

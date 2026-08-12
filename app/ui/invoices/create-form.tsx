@@ -9,23 +9,15 @@ import {
   UserCircleIcon,
 } from '@heroicons/react/24/outline';
 import { Button } from '@/app/ui/button';
-import { createInvoice } from '@/app/lib/actions';
+import { createInvoice, State } from '@/app/lib/actions';
+import { useActionState } from 'react';
 
 export default function Form({ customers }: { customers: CustomerField[] }) {
-  const handleSubmit = async (formData: FormData) => {
-    // Convert FormData to the shape expected by createInvoice (State-like)
-    const state = {
-      customerId: String(formData.get('customerId') ?? ''),
-      amount: Number(formData.get('amount')),
-      status: String(formData.get('status') ?? ''),
-    };
-
-    // createInvoice expects two arguments; pass a placeholder for the second
-    await createInvoice(state as any, undefined as any);
-  };
+  const initialState: State = { message: '', errors: {} };
+  const [state, formAction] = useActionState(createInvoice, initialState);
 
   return (
-    <form action={handleSubmit}>
+    <form action={formAction}>
       <div className="rounded-md bg-gray-50 p-4 dark:bg-gray-800 md:p-6">
         {/* Customer Name */}
         <div className="mb-4">
@@ -50,6 +42,9 @@ export default function Form({ customers }: { customers: CustomerField[] }) {
             </select>
             <UserCircleIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500" />
           </div>
+          {state.errors?.customerId && (
+            <p className="mt-1 text-xs text-red-500">{state.errors.customerId[0]}</p>
+          )}
         </div>
 
         {/* Invoice Amount */}
@@ -71,6 +66,9 @@ export default function Form({ customers }: { customers: CustomerField[] }) {
               <CurrencyDollarIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900 dark:peer-focus:text-gray-100" />
             </div>
           </div>
+          {state.errors?.amount && (
+            <p className="mt-1 text-xs text-red-500">{state.errors.amount[0]}</p>
+          )}
         </div>
 
         {/* Invoice Status */}
@@ -112,7 +110,13 @@ export default function Form({ customers }: { customers: CustomerField[] }) {
               </div>
             </div>
           </div>
+          {state.errors?.status && (
+            <p className="mt-1 text-xs text-red-500">{state.errors.status[0]}</p>
+          )}
         </fieldset>
+        {state.message && (
+          <p className="mt-4 text-sm text-red-500">{state.message}</p>
+        )}
       </div>
       <div className="mt-6 flex justify-end gap-4">
         <Link

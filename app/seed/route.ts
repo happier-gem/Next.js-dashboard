@@ -32,6 +32,24 @@ async function seedUsers(sqlClient: typeof sql) {
   return insertedUsers;
 }
 
+async function seedPasswordResetTokens(sqlClient: typeof sql) {
+  await sqlClient`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
+  await sqlClient`
+    CREATE TABLE IF NOT EXISTS password_reset_tokens (
+      id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      token_hash TEXT NOT NULL UNIQUE,
+      expires_at TIMESTAMPTZ NOT NULL,
+      used_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+    );
+  `;
+  await sqlClient`
+    CREATE INDEX IF NOT EXISTS password_reset_tokens_user_id_idx
+      ON password_reset_tokens (user_id);
+  `;
+}
+
 async function seedInvoices(sqlClient: typeof sql) {
   await sqlClient`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
 
@@ -126,6 +144,7 @@ export async function GET() {
   try {
     await sql.begin(async (sqlClient) => {
       await seedUsers(sqlClient);
+      await seedPasswordResetTokens(sqlClient);
       await seedCustomers(sqlClient);
       await seedInvoices(sqlClient);
       await seedRevenue(sqlClient);
