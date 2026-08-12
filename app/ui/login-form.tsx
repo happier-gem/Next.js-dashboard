@@ -6,10 +6,9 @@ import { ArrowRightIcon } from '@heroicons/react/20/solid';
 import { Button } from './button';
 import PasswordInput from './password-input';
 import Link from 'next/link';
-import { useActionState, useEffect, useRef } from 'react';
+import { useActionState } from 'react';
 import { authenticate } from '@/app/lib/actions';
 import { useSearchParams } from 'next/navigation';
-import { consumeLoginPrefill } from '@/app/lib/login-prefill';
 
 export default function LoginForm() {
   const searchParams = useSearchParams();
@@ -18,16 +17,6 @@ export default function LoginForm() {
     authenticate,
     undefined,
   );
-  const emailRef = useRef<HTMLInputElement>(null);
-  const passwordRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    const prefill = consumeLoginPrefill();
-    if (prefill && emailRef.current && passwordRef.current) {
-      emailRef.current.value = prefill.email;
-      passwordRef.current.value = prefill.password;
-    }
-  }, []);
 
   return (
     <form action={formAction} className="space-y-3">
@@ -50,7 +39,6 @@ export default function LoginForm() {
                 type="email"
                 name="email"
                 required
-                ref={emailRef}
               />
               <AtSymbolIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900 dark:peer-focus:text-gray-100" />
             </div>
@@ -67,7 +55,6 @@ export default function LoginForm() {
               name="password"
               required
               minLength={6}
-              ref={passwordRef}
             />
           </div>
           <div className="mt-2 text-right">

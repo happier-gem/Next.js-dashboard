@@ -9,10 +9,9 @@ import { ArrowRightIcon } from '@heroicons/react/20/solid';
 import { Button } from './button';
 import PasswordInput from './password-input';
 import Link from 'next/link';
-import { useActionState, useEffect, useState } from 'react';
+import { useActionState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { resetPassword, ResetPasswordState } from '@/app/lib/actions';
-import { stashLoginPrefill } from '@/app/lib/login-prefill';
 
 const initialState: ResetPasswordState = {};
 
@@ -23,15 +22,6 @@ export default function ResetPasswordForm() {
     resetPassword,
     initialState,
   );
-  // Tracked separately from the (uncontrolled, React-reset-after-submit)
-  // input so the value survives into the success view below.
-  const [password, setPassword] = useState('');
-
-  useEffect(() => {
-    if (state.success && state.email && password) {
-      stashLoginPrefill(state.email, password);
-    }
-  }, [state.success, state.email, password]);
 
   if (!token) {
     return (
@@ -91,7 +81,6 @@ export default function ResetPasswordForm() {
               placeholder="At least 8 characters"
               required
               minLength={8}
-              onChange={(e) => setPassword(e.target.value)}
             />
             {state.errors?.password ? (
               <ul className="mt-1 list-disc space-y-0.5 pl-4 text-xs text-red-500">
