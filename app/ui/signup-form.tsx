@@ -3,12 +3,12 @@
 import { lusitana } from '@/app/ui/fonts';
 import {
   AtSymbolIcon,
-  KeyIcon,
   UserIcon,
   ExclamationCircleIcon,
 } from '@heroicons/react/24/outline';
 import { ArrowRightIcon } from '@heroicons/react/20/solid';
 import { Button } from './button';
+import PasswordInput from './password-input';
 import Link from 'next/link';
 import { useActionState } from 'react';
 import { registerUser, SignUpState } from '@/app/lib/actions';
@@ -79,18 +79,13 @@ export default function SignUpForm() {
             >
               Password
             </label>
-            <div className="relative">
-              <input
-                className="peer block w-full rounded-md border border-gray-200 py-[9px] pl-10 text-sm outline-2 placeholder:text-gray-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
-                id="password"
-                type="password"
-                name="password"
-                placeholder="At least 8 characters"
-                required
-                minLength={8}
-              />
-              <KeyIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900 dark:peer-focus:text-gray-100" />
-            </div>
+            <PasswordInput
+              id="password"
+              name="password"
+              placeholder="At least 8 characters"
+              required
+              minLength={8}
+            />
             {state.errors?.password ? (
               <ul className="mt-1 list-disc space-y-0.5 pl-4 text-xs text-red-500">
                 {state.errors.password.map((err) => (
@@ -111,18 +106,13 @@ export default function SignUpForm() {
             >
               Confirm password
             </label>
-            <div className="relative">
-              <input
-                className="peer block w-full rounded-md border border-gray-200 py-[9px] pl-10 text-sm outline-2 placeholder:text-gray-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
-                id="confirmPassword"
-                type="password"
-                name="confirmPassword"
-                placeholder="Re-enter your password"
-                required
-                minLength={8}
-              />
-              <KeyIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900 dark:peer-focus:text-gray-100" />
-            </div>
+            <PasswordInput
+              id="confirmPassword"
+              name="confirmPassword"
+              placeholder="Re-enter your password"
+              required
+              minLength={8}
+            />
             {state.errors?.confirmPassword && (
               <p className="mt-1 text-xs text-red-500">
                 {state.errors.confirmPassword[0]}
