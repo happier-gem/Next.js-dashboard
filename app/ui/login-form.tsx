@@ -6,9 +6,10 @@ import { ArrowRightIcon } from '@heroicons/react/20/solid';
 import { Button } from './button';
 import PasswordInput from './password-input';
 import Link from 'next/link';
-import { useActionState } from 'react';
+import { useActionState, useEffect, useRef } from 'react';
 import { authenticate } from '@/app/lib/actions';
 import { useSearchParams } from 'next/navigation';
+import { consumeLoginPrefill } from '@/app/lib/login-prefill';
 
 export default function LoginForm() {
   const searchParams = useSearchParams();
@@ -17,6 +18,17 @@ export default function LoginForm() {
     authenticate,
     undefined,
   );
+  const emailRef = useRef<HTMLInputElement>(null);
+  const passwordRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const prefill = consumeLoginPrefill();
+    if (prefill && emailRef.current && passwordRef.current) {
+      emailRef.current.value = prefill.email;
+      passwordRef.current.value = prefill.password;
+    }
+  }, []);
+
   return (
     <form action={formAction} className="space-y-3">
       <div className="flex-1 rounded-lg bg-gray-50 px-6 pb-4 pt-8 dark:bg-gray-800">
@@ -33,12 +45,12 @@ export default function LoginForm() {
             </label>
             <div className="relative">
               <input
-                className="peer block w-full rounded-md border border-gray-200 py-[9px] pl-10 text-sm outline-2 placeholder:text-gray-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
+                className="peer block w-full rounded-md border border-gray-200 py-[9px] pl-10 text-sm outline-2 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
                 id="email"
                 type="email"
                 name="email"
-                placeholder="Enter your email address"
                 required
+                ref={emailRef}
               />
               <AtSymbolIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900 dark:peer-focus:text-gray-100" />
             </div>
@@ -53,9 +65,9 @@ export default function LoginForm() {
             <PasswordInput
               id="password"
               name="password"
-              placeholder="Enter password"
               required
               minLength={6}
+              ref={passwordRef}
             />
           </div>
           <div className="mt-2 text-right">

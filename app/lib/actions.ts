@@ -264,6 +264,7 @@ export type ResetPasswordState = {
   errors?: { password?: string[]; confirmPassword?: string[] };
   message?: string;
   success?: boolean;
+  email?: string;
 };
 
 export async function resetPassword(
@@ -286,12 +287,16 @@ export async function resetPassword(
   const { token, password } = validatedFields.data;
   const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
 
+  let email: string;
+
   try {
-    const rows = await sql<{ id: string; user_id: string }[]>`
-      SELECT id, user_id FROM password_reset_tokens
-      WHERE token_hash = ${tokenHash}
-        AND used_at IS NULL
-        AND expires_at > now()
+    const rows = await sql<{ id: string; user_id: string; email: string }[]>`
+      SELECT prt.id, prt.user_id, u.email
+      FROM password_reset_tokens prt
+      JOIN users u ON u.id = prt.user_id
+      WHERE prt.token_hash = ${tokenHash}
+        AND prt.used_at IS NULL
+        AND prt.expires_at > now()
     `;
     const tokenRow = rows[0];
 
@@ -308,12 +313,18 @@ export async function resetPassword(
       await sqlClient`UPDATE users SET password = ${hashedPassword} WHERE id = ${tokenRow.user_id}`;
       await sqlClient`UPDATE password_reset_tokens SET used_at = now() WHERE id = ${tokenRow.id}`;
     });
+
+    email = tokenRow.email;
   } catch (error) {
     console.error('Failed to reset password:', error);
     return { message: 'Something went wrong. Please try again.' };
   }
 
-  return { message: 'Your password has been reset successfully.', success: true };
+  return {
+    message: 'Your password has been reset successfully.',
+    success: true,
+    email,
+  };
 }
 
 export async function authenticate(

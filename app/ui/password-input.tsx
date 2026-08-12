@@ -1,21 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { forwardRef, useState, type ChangeEvent } from 'react';
 import { EyeIcon, EyeSlashIcon, KeyIcon } from '@heroicons/react/24/outline';
 
-export default function PasswordInput({
-  id,
-  name,
-  placeholder,
-  required,
-  minLength,
-}: {
-  id: string;
-  name: string;
-  placeholder: string;
-  required?: boolean;
-  minLength?: number;
-}) {
+const PasswordInput = forwardRef<
+  HTMLInputElement,
+  {
+    id: string;
+    name: string;
+    placeholder?: string;
+    required?: boolean;
+    minLength?: number;
+    onChange?: (e: ChangeEvent<HTMLInputElement>) => void;
+  }
+>(function PasswordInput(
+  { id, name, placeholder, required, minLength, onChange },
+  ref,
+) {
   const [visible, setVisible] = useState(false);
 
   return (
@@ -28,6 +29,8 @@ export default function PasswordInput({
         placeholder={placeholder}
         required={required}
         minLength={minLength}
+        onChange={onChange}
+        ref={ref}
       />
       <KeyIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900 dark:peer-focus:text-gray-100" />
       <button
@@ -44,4 +47,6 @@ export default function PasswordInput({
       </button>
     </div>
   );
-}
+});
+
+export default PasswordInput;
